@@ -6,7 +6,7 @@
  * Time: 22:03
  */
 
-class Usuario {
+class Usuario extends  Model {
 
     private $idusuario;
     private $deslogin;
@@ -58,6 +58,41 @@ class Usuario {
                 }
             }
         }
+    }
+
+    public function getList() {
+        $oSql = new Sql();
+        $aDados =  $oSql->select('select * from tb_usuarios order by deslogin');
+        return $this->getAll($aDados);
+    }
+
+    public function search($sLogin) {
+        $oSql = new Sql();
+        $aDados =  $oSql->select("select * from tb_usuarios where deslogin like :SEARCH order by deslogin",
+                                        [':SEARCH' => '%'.$sLogin.'%']);
+        return $this->getAll($aDados);
+    }
+
+    public function insert() {
+        $oSql = new Sql();
+        // Chama a procedure do banco
+        $xResult = $oSql->select('CALL sp_tbusuarios_insert(:LOGIN, :PASSWORD)', [':LOGIN' => $this->getDeslogin(), ':PASSWORD' => $this->getDessenha()]);
+
+        if(count($xResult) > 0) {
+            $this->setBean($xResult[0], $this);
+        }
+    }
+
+    public function update() {
+        $oSql = new Sql();
+        $oSql->query('update tb_usuarios set deslogin = :LOGIN, dessenha = :PASSWORD where idusuario = :ID', [':LOGIN'     => $this->getDeslogin(),
+                                                                                                                        ':PASSWORD' => $this->getDessenha(),
+                                                                                                                        ':ID'       => $this->getIdusuario()]);
+    }
+
+    public function delete() {
+        $oSql = new Sql();
+        $oSql->query('delete from tb_usuarios where idusuario = :ID', [':ID' => $this->getIdusuario()]);
     }
 
     public function __toString() {
